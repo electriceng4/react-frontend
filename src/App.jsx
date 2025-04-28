@@ -6,6 +6,8 @@ function App() {
   const [error, setError] = useState('');
   const [textFileName, setTextFileName] = useState('');
 
+  const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api"; // ✅ 추가: API 기본 경로
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setError('');
@@ -21,7 +23,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/upload', {
+      const response = await fetch(`${apiBaseUrl}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -57,7 +59,7 @@ function App() {
       {textFileName && (
         <div style={{ marginTop: '20px' }}>
           <a
-            href={`http://127.0.0.1:8000/api/download/${textFileName}`}
+            href={`${apiBaseUrl}/download/${textFileName}`} // ✅ 수정: 다운로드 링크도 새 URL로
             download
           >
             변환된 텍스트 파일 다운로드
