@@ -6,8 +6,10 @@ function App() {
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
   const [textFileName, setTextFileName] = useState('');
+  const [question, setQuestion] = useState('');
+  const [queryResult, setQueryResult] = useState(null);
 
-  const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api"; // API 기본 경로
+  const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api"; // 백엔드 주소
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -35,14 +37,42 @@ function App() {
       }
 
       const data = await response.json();
-      setText(data.transcribed_text); // 변환된 원본 텍스트
-      setSummary(data.summarized_text); // 요약본
+      setText(data.transcribed_text);
+      setSummary(data.summarized_text);
       setTextFileName(data.text_file);
     } catch (err) {
       setError(err.message || '업로드 실패');
       setText('');
       setSummary('');
       setTextFileName('');
+    }
+  };
+
+  const handleQuestion = async () => {
+    if (!question.trim()) {
+      alert('질문을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('query', question);
+
+      const response = await fetch(`${apiBaseUrl}/query`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail);
+      }
+
+      const data = await response.json();
+      setQueryResult(data.result);
+    } catch (err) {
+      setQueryResult(null);
+      setError(err.message || '질문 처리 실패');
     }
   };
 
@@ -64,10 +94,11 @@ function App() {
         width: '100%',
         maxWidth: '600px'
       }}>
+        {/* 파일 업로드 */}
         <input 
           type="file" 
           accept=".mp3" 
-          onChange={handleFileChange} 
+          onChange={handleFileChange}
           style={{
             padding: '10px',
             border: '1px solid #ccc',
@@ -91,6 +122,7 @@ function App() {
           업로드 및 변환
         </button>
 
+        {/* 에러 메시지 */}
         {error && (
           <div style={{
             marginTop: '20px',
@@ -105,6 +137,7 @@ function App() {
           </div>
         )}
 
+        {/* 변환 결과 */}
         {text && (
           <div style={{
             marginTop: '30px',
@@ -147,6 +180,64 @@ function App() {
               변환된 텍스트 파일 다운로드
             </a>
           </div>
+        )}
+      </div>
+
+      {/* 질문 검색 */}
+      <div style={{
+        marginTop: '40px',
+        padding: '30px',
+        backgroundColor: '#f0f0ff',
+        borderRadius: '12px',
+        maxWidth: '600px',
+        width: '100%',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+      }}>
+        <h2>💬 회의에 대해 질문하기</h2>
+        <input
+          type="text"
+          placeholder="예: 프로젝트 일정이 어떻게 변경되었나요?"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            marginBottom: '10px'
+          }}
+        />
+        <button
+          onClick={handleQuestion}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#673AB7',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          회의 검색
+        </button>
+
+        {/* 검색 결과 */}
+        {queryResult && typeof queryResult === 'object' && (
+          <div style={{
+            marginTop: '20px',
+            padding: '20px',
+            backgroundColor: '#e8f5e9',
+            borderRadius: '8px'
+          }}>
+            <h3>🔎 유사한 회의 결과</h3>
+            <p><strong>회의 ID:</strong> {queryResult.meeting_id}</p>
+            <p><strong>요약:</strong> {queryResult.summary}</p>
+            <p><strong>본문:</strong><br />{queryResult.text}</p>
+          </div>
+        )}
+        {queryResult && typeof queryResult === 'string' && (
+          <p style={{ marginTop: '10px', color: 'gray' }}>{queryResult}</p>
         )}
       </div>
     </div>
