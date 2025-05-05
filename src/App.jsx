@@ -77,89 +77,64 @@ function App() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      padding: '40px',
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#f2f4f8',
-      minHeight: '100vh',
-      gap: '30px'
-    }}>
-      {/* 좌측: 파일 업로드 및 요약 */}
-      <div style={{ flex: 1, background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-        <h2>🎧 회의록 변환 및 요약</h2>
-        <input type="file" accept=".mp3" onChange={handleFileChange} style={{ margin: '10px 0', width: '100%' }} />
-        <button onClick={handleUpload} style={{ backgroundColor: '#1976d2', color: 'white', padding: '10px 20px', borderRadius: '6px', border: 'none' }}>업로드 및 변환</button>
+    <div className="min-h-screen bg-gray-100 p-8 font-sans">
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">🎧 회의록 변환 & 요약</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 왼쪽: 업로드 */}
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-xl font-semibold mb-4">📁 파일 업로드</h2>
+          <input type="file" accept=".mp3" onChange={handleFileChange} className="block w-full mb-4 border p-2 rounded" />
+          <button onClick={handleUpload} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-4">
+            업로드 및 변환
+          </button>
 
-        {error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
+          {error && <div className="text-red-600 mt-2">⚠️ {error}</div>}
 
-        {text && (
-          <div style={{ marginTop: '20px' }}>
-            <h4>📄 변환된 텍스트</h4>
-            <div style={{ backgroundColor: '#eef6ff', padding: '10px', borderRadius: '6px', whiteSpace: 'pre-wrap' }}>{text}</div>
-          </div>
-        )}
-
-        {summary && (
-          <div style={{ marginTop: '20px' }}>
-            <h4>📝 요약된 텍스트</h4>
-            <div style={{ backgroundColor: '#fff6e6', padding: '10px', borderRadius: '6px', whiteSpace: 'pre-wrap' }}>{summary}</div>
-          </div>
-        )}
-
-        {textFileName && (
-          <div style={{ marginTop: '20px' }}>
-            <a href={`${apiBaseUrl}/download/${textFileName}`} download style={{ textDecoration: 'none', color: 'white', backgroundColor: '#43a047', padding: '10px 20px', borderRadius: '6px' }}>
-              변환된 텍스트 다운로드
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* 우측: 질문 챗봇 */}
-      <div style={{ flex: 1, background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-        <h2>💬 회의 챗봇</h2>
-        <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '20px', paddingRight: '10px' }}>
-          {chatHistory.map((entry, idx) => (
-            <div key={idx} style={{
-              textAlign: entry.role === 'user' ? 'right' : 'left',
-              marginBottom: '10px'
-            }}>
-              <div style={{
-                display: 'inline-block',
-                backgroundColor: entry.role === 'user' ? '#c5e1a5' : '#e3f2fd',
-                padding: '10px',
-                borderRadius: '10px',
-                maxWidth: '80%'
-              }}>
-                {entry.content}
-              </div>
+          {text && (
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">📝 변환된 텍스트</h3>
+              <div className="bg-blue-50 p-4 rounded whitespace-pre-wrap text-gray-800 text-sm">{text}</div>
             </div>
-          ))}
+          )}
+
+          {summary && (
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">📄 요약된 텍스트</h3>
+              <div className="bg-yellow-50 p-4 rounded whitespace-pre-wrap text-gray-800 text-sm">{summary}</div>
+            </div>
+          )}
+
+          {textFileName && (
+            <div className="mt-4">
+              <a href={`${apiBaseUrl}/download/${textFileName}`} download className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                변환된 텍스트 다운로드
+              </a>
+            </div>
+          )}
         </div>
 
-        <input
-          type="text"
-          placeholder="예: 오늘 회의 요약해줘"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            marginBottom: '10px'
-          }}
-        />
-        <button onClick={handleQuestion} style={{
-          backgroundColor: '#673ab7',
-          color: 'white',
-          padding: '10px 20px',
-          borderRadius: '6px',
-          border: 'none'
-        }}>
-          질문하기
-        </button>
+        {/* 오른쪽: 챗봇 */}
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-xl font-semibold mb-4">💬 회의 챗봇</h2>
+          <div className="h-80 overflow-y-auto border p-4 rounded mb-4 bg-gray-50">
+            {chatHistory.map((entry, idx) => (
+              <div key={idx} className={`mb-3 ${entry.role === 'user' ? 'text-right' : 'text-left'}`}>
+                <span className={`inline-block px-3 py-2 rounded-lg ${entry.role === 'user' ? 'bg-green-200' : 'bg-gray-300'} text-gray-800 text-sm max-w-xs`}>{entry.content}</span>
+              </div>
+            ))}
+          </div>
+
+          <input
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="예: 오늘 회의 요약해줘"
+            className="w-full border px-3 py-2 rounded mb-2"
+          />
+          <button onClick={handleQuestion} className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded">
+            질문하기
+          </button>
+        </div>
       </div>
     </div>
   );
