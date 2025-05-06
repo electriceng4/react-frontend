@@ -27,10 +27,11 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await 
-      fetch(`${apiBaseUrl}/query_meeting`,
-         { method: 'POST', body: formData });
-         
+      const response = await fetch(`${apiBaseUrl}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail);
