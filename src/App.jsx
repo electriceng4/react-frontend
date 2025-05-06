@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './App.css'; // 일반 CSS 불러오기
+import './App.css'; // 일반 CSS
 
 function App() {
   const [file, setFile] = useState(null);
@@ -70,15 +70,16 @@ function App() {
       }
 
       const data = await response.json();
-      const newChats = data.chat || [];
+      const newChat = data.chat || [];
 
       setChatHistory(prev => [
-      ...prev,
-      ...newChats.map(entry => ({
-      role: entry.role === 'assistant' ? 'bot' : entry.role,
-      content: entry.content
-  }))
-]);
+        ...prev,
+        ...newChat.map(entry => ({
+          role: entry.role === 'assistant' ? 'bot' : entry.role,
+          content: entry.content
+        }))
+      ]);
+
       setQuestion('');
     } catch (err) {
       console.error("❌ 질문 실패:", err);
@@ -126,7 +127,7 @@ function App() {
           <div className="chat-box">
             {chatHistory.map((entry, idx) => (
               <div key={idx} className={`chat ${entry.role}`}>
-                {entry.content}
+                <span>{entry.role === 'bot' ? '🤖' : '👤'} {entry.content}</span>
               </div>
             ))}
           </div>
@@ -144,4 +145,3 @@ function App() {
 }
 
 export default App;
-
