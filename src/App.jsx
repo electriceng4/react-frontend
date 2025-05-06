@@ -70,13 +70,18 @@ function App() {
       }
 
       const data = await response.json();
+      const newChats = data.chat || [];
+
       setChatHistory(prev => [
-        ...prev,
-        { role: 'user', content: question },
-        { role: 'bot', content: data.answer },
-      ]);
+      ...prev,
+      ...newChats.map(entry => ({
+      role: entry.role === 'assistant' ? 'bot' : entry.role,
+      content: entry.content
+  }))
+]);
       setQuestion('');
     } catch (err) {
+      console.error("❌ 질문 실패:", err);
       setError(err.message || '질문 실패');
     }
   };
