@@ -74,8 +74,8 @@ function App() {
 
       setChatHistory(prev => [
         ...prev,
-        ...newChats
-          .filter(entry => entry.role !== 'mode' && entry.role !== 'meeting_id') // 이 줄 추가!
+        ...newChat
+          .filter(entry => entry.role !== 'mode' && entry.role !== 'meeting_id')
           .map(entry => ({
             role: entry.role === 'assistant' ? 'bot' : entry.role,
             content: entry.content
