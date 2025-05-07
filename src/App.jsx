@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import './App.css'; // 일반 CSS
+import { useState, useRef, useEffect } from 'react';
+import './App.css';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -9,8 +9,15 @@ function App() {
   const [textFileName, setTextFileName] = useState('');
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
+  const chatEndRef = useRef(null);
 
   const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api";
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -55,6 +62,10 @@ function App() {
       return;
     }
 
+    const userMsg = { role: 'user', content: question };
+    setChatHistory(prev => [...prev, userMsg]);
+    setQuestion('');
+
     const formData = new FormData();
     formData.append('query', question);
 
@@ -70,19 +81,41 @@ function App() {
       }
 
       const data = await response.json();
-      const newChat = data.chat || [];
+      const chatEntry = (data.chat || []).find(entry => entry.role === 'assistant');
+      const fullText = chatEntry?.content || '';
 
-      setChatHistory(prev => [
-        ...prev,
-        ...newChat
-          .filter(entry => entry.role !== 'mode' && entry.role !== 'meeting_id')
-          .map(entry => ({
-            role: entry.role === 'assistant' ? 'bot' : entry.role,
-            content: entry.content
-          }))
-      ]);
+      let index = 0;
+      let currentText = '';
+      const typingSpeed = 30;
 
-      setQuestion('');
+      const interval = setInterval(() => {
+        currentText += fullText[index];
+        setChatHistory(prev => {
+          const newHistory = [...prev];
+          const botTyping = { role: 'bot', content: currentText, loading: true };
+
+          if (newHistory.length > 0 && newHistory[newHistory.length - 1].role === 'bot') {
+            newHistory[newHistory.length - 1] = botTyping;
+          } else {
+            newHistory.push(botTyping);
+          }
+
+          return newHistory;
+        });
+
+        index++;
+        if (index >= fullText.length) {
+          clearInterval(interval);
+          setChatHistory(prev => {
+            const newHistory = [...prev];
+            if (newHistory.length > 0) {
+              newHistory[newHistory.length - 1].loading = false;
+            }
+            return newHistory;
+          });
+        }
+      }, typingSpeed);
+
     } catch (err) {
       console.error("❌ 질문 실패:", err);
       setError(err.message || '질문 실패');
@@ -114,11 +147,7 @@ function App() {
           )}
 
           {textFileName && (
-            <a
-              className="download"
-              href={`${apiBaseUrl}/download/${textFileName}`}
-              download
-            >
+            <a className="download" href={`${apiBaseUrl}/download/${textFileName}`} download>
               변환된 텍스트 다운로드
             </a>
           )}
@@ -128,17 +157,13 @@ function App() {
           <h2>💬 회의 챗봇</h2>
           <div className="chat-box">
             {chatHistory.map((entry, idx) => (
-              <div key={idx} className={`chat ${entry.role}`}>
+              <div key={idx} className={`chat ${entry.role} ${entry.loading ? 'typing' : ''}`}>
                 <span>{entry.role === 'bot' ? '🤖' : '👤'} {entry.content}</span>
               </div>
             ))}
+            <div ref={chatEndRef} />
           </div>
-          <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="예: 오늘 회의 요약해줘"
-          />
+          <input type="text" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="예: 오늘 회의 요약해줘" />
           <button onClick={handleQuestion}>질문하기</button>
         </div>
       </div>
