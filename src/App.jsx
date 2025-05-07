@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import './App.css'; // 일반 CSS
+import { useState, useRef, useEffect } from 'react';
+import './App.css'; // 일반 CSS + 커서 애니메이션 스타일 포함 필요
 
 function App() {
   const [file, setFile] = useState(null);
@@ -9,8 +9,16 @@ function App() {
   const [textFileName, setTextFileName] = useState('');
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
+  const chatEndRef = useRef(null); // ✅ 스크롤 자동 내리기용 ref
 
   const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api";
+
+  useEffect(() => {
+    // ✅ 새 채팅이 추가될 때마다 맨 아래로 스크롤
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -55,6 +63,10 @@ function App() {
       return;
     }
 
+    const userMsg = { role: 'user', content: question };
+    setChatHistory(prev => [...prev, userMsg]); // ✅ 사용자 질문 먼저 추가
+    setQuestion('');
+
     const formData = new FormData();
     formData.append('query', question);
 
@@ -70,19 +82,43 @@ function App() {
       }
 
       const data = await response.json();
-      const newChat = data.chat || [];
+      const chatEntry = (data.chat || []).find(entry => entry.role === 'assistant');
+      const fullText = chatEntry?.content || '';
 
-      setChatHistory(prev => [
-        ...prev,
-        ...newChat
-          .filter(entry => entry.role !== 'mode' && entry.role !== 'meeting_id')
-          .map(entry => ({
-            role: entry.role === 'assistant' ? 'bot' : entry.role,
-            content: entry.content
-          }))
-      ]);
+      // ✅ 한 글자씩 출력: 타이핑 애니메이션
+      let index = 0;
+      let currentText = '';
+      const typingSpeed = 30;
 
-      setQuestion('');
+      const interval = setInterval(() => {
+        currentText += fullText[index];
+
+        setChatHistory(prev => {
+          const newHistory = [...prev];
+          const botTyping = { role: 'bot', content: currentText, loading: true }; // loading = 커서 표시용
+
+          if (newHistory.length > 0 && newHistory[newHistory.length - 1].role === 'bot') {
+            newHistory[newHistory.length - 1] = botTyping;
+          } else {
+            newHistory.push(botTyping);
+          }
+
+          return newHistory;
+        });
+
+        index++;
+        if (index >= fullText.length) {
+          clearInterval(interval);
+          setChatHistory(prev => {
+            const newHistory = [...prev];
+            if (newHistory.length > 0) {
+              newHistory[newHistory.length - 1].loading = false; // ✅ 커서 제거
+            }
+            return newHistory;
+          });
+        }
+      }, typingSpeed);
+
     } catch (err) {
       console.error("❌ 질문 실패:", err);
       setError(err.message || '질문 실패');
@@ -128,10 +164,11 @@ function App() {
           <h2>💬 회의 챗봇</h2>
           <div className="chat-box">
             {chatHistory.map((entry, idx) => (
-              <div key={idx} className={`chat ${entry.role}`}>
+              <div key={idx} className={`chat ${entry.role} ${entry.loading ? 'typing' : ''}`}>
                 <span>{entry.role === 'bot' ? '🤖' : '👤'} {entry.content}</span>
               </div>
             ))}
+            <div ref={chatEndRef} />
           </div>
           <input
             type="text"
