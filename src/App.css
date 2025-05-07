@@ -1,3 +1,120 @@
+body {
+  margin: 0;
+  background-color: #111;
+  color: #f0f0f0;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  padding: 40px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.main {
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+}
+
+.left-panel,
+.right-panel {
+  flex: 1;
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+input[type="file"],
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  background-color: #2a2a2a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+button:hover {
+  background-color: #666;
+}
+
+.box {
+  background: #2c2c2c;
+  padding: 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+
+.error {
+  color: red;
+  margin: 10px 0;
+}
+
+.download {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #00b894;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.chat-box {
+  height: 320px;
+  overflow-y: auto;
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat {
+  margin-bottom: 10px;
+  max-width: 80%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.chat.user {
+  background-color: #2e86de;
+  align-self: flex-end;
+  color: white;
+  text-align: right;
+  margin-left: auto;
+}
+
+.chat.bot {
+  background-color: #b2bec3;
+  color: black;
+  text-align: left;
+  margin-right: auto;
+}
+
+/* 타이핑 애니메이션 */
 .chat.typing::after {
   content: '▌';
   animation: blink 1s steps(1) infinite;
