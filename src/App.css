@@ -86,8 +86,6 @@ button:hover {
   padding: 10px;
   border-radius: 6px;
   margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
 }
 
 .chat {
@@ -112,16 +110,4 @@ button:hover {
   color: black;
   text-align: left;
   margin-right: auto;
-}
-
-/* 타이핑 애니메이션 */
-.chat.typing::after {
-  content: '▌';
-  animation: blink 1s steps(1) infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
 }
