@@ -1,41 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
-import './App.css'; // 일반 CSS + 커서 애니메이션 스타일 포함 필요
+import './App.css';
 
 function App() {
-  const [file, setFile] = useState(null);
+  const [meetingId, setMeetingId] = useState('');
+  const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
-  const [textFileName, setTextFileName] = useState('');
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
-  const chatEndRef = useRef(null); // ✅ 스크롤 자동 내리기용 ref
+  const chatEndRef = useRef(null);
 
   const apiBaseUrl = "https://fastapi-backend-79a4.onrender.com/api";
 
   useEffect(() => {
-    // ✅ 새 채팅이 추가될 때마다 맨 아래로 스크롤
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatHistory]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setError('');
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      setError('파일을 선택하세요!');
+  const handleSaveMeeting = async () => {
+    if (!meetingId || !title || !text) {
+      setError('모든 필드를 입력해주세요.');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('meeting_id', meetingId);
+    formData.append('title', title);
+    formData.append('text', text);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/upload`, {
+      const response = await fetch(`${apiBaseUrl}/save_meeting`, {
         method: 'POST',
         body: formData,
       });
@@ -46,14 +42,11 @@ function App() {
       }
 
       const data = await response.json();
-      setText(data.transcribed_text);
-      setSummary(data.summarized_text);
-      setTextFileName(data.text_file);
+      setSummary(data.summary || '');
+      setError('');
     } catch (err) {
-      setError(err.message || '업로드 실패');
-      setText('');
+      setError(err.message || '회의 저장 실패');
       setSummary('');
-      setTextFileName('');
     }
   };
 
@@ -64,7 +57,7 @@ function App() {
     }
 
     const userMsg = { role: 'user', content: question };
-    setChatHistory(prev => [...prev, userMsg]); // ✅ 사용자 질문 먼저 추가
+    setChatHistory(prev => [...prev, userMsg]);
     setQuestion('');
 
     const formData = new FormData();
@@ -85,34 +78,29 @@ function App() {
       const chatEntry = (data.chat || []).find(entry => entry.role === 'assistant');
       const fullText = chatEntry?.content || '';
 
-      // ✅ 한 글자씩 출력: 타이핑 애니메이션
       let index = 0;
       let currentText = '';
       const typingSpeed = 30;
 
       const interval = setInterval(() => {
         currentText += fullText[index];
-
         setChatHistory(prev => {
           const newHistory = [...prev];
-          const botTyping = { role: 'bot', content: currentText, loading: true }; // loading = 커서 표시용
-
+          const botTyping = { role: 'bot', content: currentText, loading: true };
           if (newHistory.length > 0 && newHistory[newHistory.length - 1].role === 'bot') {
             newHistory[newHistory.length - 1] = botTyping;
           } else {
             newHistory.push(botTyping);
           }
-
           return newHistory;
         });
-
         index++;
         if (index >= fullText.length) {
           clearInterval(interval);
           setChatHistory(prev => {
             const newHistory = [...prev];
             if (newHistory.length > 0) {
-              newHistory[newHistory.length - 1].loading = false; // ✅ 커서 제거
+              newHistory[newHistory.length - 1].loading = false;
             }
             return newHistory;
           });
@@ -127,36 +115,27 @@ function App() {
 
   return (
     <div className="container">
-      <h1 className="title">🎧 회의록 변환 & 요약</h1>
+      <h1 className="title">📝 회의 텍스트 입력 & 요약</h1>
       <div className="main">
         <div className="left-panel">
-          <h2>📁 파일 업로드</h2>
-          <input type="file" accept=".mp3" onChange={handleFileChange} />
-          <button onClick={handleUpload}>업로드 및 변환</button>
+          <h2>📌 회의 텍스트 입력</h2>
+          <input type="text" placeholder="회의 ID" value={meetingId} onChange={e => setMeetingId(e.target.value)} />
+          <input type="text" placeholder="제목 (예: 드론 통합 회의)" value={title} onChange={e => setTitle(e.target.value)} />
+          <textarea
+            placeholder="회의 원문을 여기에 입력하세요..."
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={10}
+            style={{ width: '100%', marginBottom: '12px', padding: '10px', background: '#2a2a2a', color: '#fff', borderRadius: '6px' }}
+          />
+          <button onClick={handleSaveMeeting}>저장 및 요약 생성</button>
           {error && <p className="error">⚠️ {error}</p>}
-
-          {text && (
-            <>
-              <h3>📝 변환된 텍스트</h3>
-              <pre className="box">{text}</pre>
-            </>
-          )}
 
           {summary && (
             <>
-              <h3>📄 요약된 텍스트</h3>
+              <h3>📄 자동 생성된 요약</h3>
               <pre className="box">{summary}</pre>
             </>
-          )}
-
-          {textFileName && (
-            <a
-              className="download"
-              href={`${apiBaseUrl}/download/${textFileName}`}
-              download
-            >
-              변환된 텍스트 다운로드
-            </a>
           )}
         </div>
 
